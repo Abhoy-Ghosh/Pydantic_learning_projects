@@ -1,17 +1,33 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, AnyUrl, Field
 from typing import List,Dict,Optional
 
-# step1 : make pydatic class 
+# step1 : make pydantic class 
 class Patient(BaseModel):
+    # type validation
     name: str
     age: int
     weight:float 
     allergies :List[str] # <- means List of str - 2 level validation (do not use list directly as it can not use for type check)
+                        # list  ❌ no inner validation
+                        # List[str] ✅ strict validation
     contact: Dict[str,str] # <- means key value both are str
+    new_visit : bool = True # <- default value(True is set)
 
     # making optional fields
     married : Optional[bool] = None # <- none is important for optional fields  else it throw validation error
     family_members : Optional[Dict[str,str]] =None
+
+    # data validation (custom validators by pydantic)
+    email : EmailStr
+    linkedin_url:Optional[AnyUrl] = None
+
+    #data validation (using Field function)
+    height: float = Field(gt  = 0) # it means we can not set the value less than 0 (always greater than 0)
+    working_hours : int= Field(gt = 0, lt = 24) # gt,lt,ge,le
+    diagonsed_by : List[str] = Field(max_items = 5) # max items 5 for the list(max length of list 5)
+    # max_length works for strings
+
+    # field function also help to add metadata
 
 
 # step2: create a object out of the class
@@ -20,7 +36,12 @@ patient_info_dict = {
     'age':20,
     'weight':60.5,
     'allergies':['dust','pollen'],
-    'contact' : {'email':'abc@xyz.com', 'address' : 'pqr road'}
+    'contact' : {'email':'abc@xyz.com', 'address' : 'pqr road'},
+    'email' : 'abc@xyz.com',
+    'linkedin_url' : 'https:/linkedin.com/abc123',
+    'height' : 80.2,
+    'working_hours' : 12,
+    'diagonsed_by':['abc','xyz','pqr','lmn']
     } # <- we need to put all the required fields in the raw data which fields are intialized in pydantic model
 
 patient_obj1=Patient(**patient_info_dict)# object intiate with raw data also checking at this step
@@ -31,6 +52,12 @@ def insert_patient_data(patient_dummy : Patient) :#patient_dummy variable of cus
     print(patient_dummy.age)
     print(patient_dummy.family_members)
     print(patient_dummy.married)
+    print(patient_dummy.new_visit)
+    print(patient_dummy.email)
+    print(patient_dummy.linkedin_url)
+    print(patient_dummy.height)
+    print(patient_dummy.working_hours)
+    print(patient_dummy.diagonsed_by)
     print('inserted successfully')
     print()
 
